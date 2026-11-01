@@ -12,7 +12,7 @@ def generate_launch_description():
         DeclareLaunchArgument('model', default_value='checkpoints/high/final_model.zip'),
         DeclareLaunchArgument('episodes', default_value='10'),
         Node(
-            package='d2dtracker_rl', executable='evaluate', name='d2d_evaluate',
+            package='shaheen_rl', executable='evaluate', name='d2d_evaluate',
             output='screen',
             arguments=['--stage', LaunchConfiguration('stage'),
                        '--model', LaunchConfiguration('model'),

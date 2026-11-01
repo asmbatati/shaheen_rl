@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>d2dtracker_rl</name>
+  <name>shaheen_rl</name>
   <version>0.2.0</version>
   <description>Reinforcement learning for drone-to-drone interception (Gymnasium + SB3).</description>
   <maintainer email="asmalbatati@hotmail.com">Abdulrahman S. Al-Batati</maintainer>
@@ -16,7 +16,7 @@
   <depend>mavros_msgs</depend>
   <depend>aerogym_px4</depend>
   <depend>std_srvs</depend>
-  <exec_depend>d2dtracker_interception</exec_depend>  <!-- PN baseline in evaluate_intercept -->
+  <exec_depend>shaheen_guidance</exec_depend>  <!-- PN baseline in evaluate_intercept -->
 
   <!-- RL stack (stable-baselines3, gymnasium, tensorboard) is pip-installed;
        there is no apt package on Jazzy. See the package README for the command. -->

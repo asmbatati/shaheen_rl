@@ -3,7 +3,7 @@ from glob import glob
 
 from setuptools import find_packages, setup
 
-package_name = 'd2dtracker_rl'
+package_name = 'shaheen_rl'
 
 setup(
     name=package_name,
@@ -25,12 +25,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'train = d2dtracker_rl.train:main',
-            'evaluate = d2dtracker_rl.evaluate:main',
-            'curriculum = d2dtracker_rl.curriculum:main',
-            'train_intercept = d2dtracker_rl.aerogym_intercept.train_intercept:main',
-            'evaluate_intercept = d2dtracker_rl.aerogym_intercept.evaluate_intercept:main',
-            'policy_head = d2dtracker_rl.aerogym_intercept.policy_head:main',
+            'train = shaheen_rl.train:main',
+            'evaluate = shaheen_rl.evaluate:main',
+            'curriculum = shaheen_rl.curriculum:main',
+            'train_intercept = shaheen_rl.aerogym_intercept.train_intercept:main',
+            'evaluate_intercept = shaheen_rl.aerogym_intercept.evaluate_intercept:main',
+            'policy_head = shaheen_rl.aerogym_intercept.policy_head:main',
         ],
     },
 )

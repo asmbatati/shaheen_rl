@@ -12,7 +12,7 @@ Rank mapping: logical worker rank ``r`` occupies PX4 instances ``2r``
 the pair or across workers. Keep ``2r+1 <= 9`` (PX4's instance port map breaks
 above that — see AeroGym TRAINING.md).
 
-Interception-specific code lives HERE (d2dtracker_rl); aerogym_px4 stays a
+Interception-specific code lives HERE (shaheen_rl); aerogym_px4 stays a
 generic single-vehicle playground.
 """
 import os
@@ -73,7 +73,7 @@ class InterceptSimInstance(SimInstance):
         # ns-matched param files (aerogym's wildcards are /uav/**; the target
         # needs /target/** or timesync/conn hardening silently doesn't apply)
         from ament_index_python.packages import get_package_share_directory
-        cfg = os.path.join(get_package_share_directory('d2dtracker_rl'),
+        cfg = os.path.join(get_package_share_directory('shaheen_rl'),
                            'config', 'mavros')
         self._spawn('target_mavros', [
             'ros2', 'run', 'mavros', 'mavros_node', '--ros-args',

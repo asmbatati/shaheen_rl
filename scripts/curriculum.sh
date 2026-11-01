@@ -52,7 +52,7 @@ for stage in $STAGES; do
     echo "skip $stage ($keep exists)"; INIT=$keep; continue
   fi
   echo "$(date +%T) stage $target@$speed from $INIT ($STEPS steps, $STEP_MODE)"
-  ros2 run d2dtracker_rl train_intercept --target-policy "$target" --target-speed "$speed" \
+  ros2 run shaheen_rl train_intercept --target-policy "$target" --target-speed "$speed" \
     --init-from "$INIT" --env-config config/refine_tight.yaml --learning-rate 1e-4 \
     --ent-coef 0.1 --timesteps "$STEPS" --pair-rank "$PAIR_RANK" "${STACK[@]}" \
     --device cpu --out "$D" --log-dir "$D/runs" > "$D/train.log" 2>&1
@@ -60,7 +60,7 @@ for stage in $STAGES; do
   for ck in "$D"/intercept/sac_intercept_"${target}"_*_steps.zip; do
     [ -f "$ck" ] || continue
     name=$(basename "$ck" .zip)
-    ros2 run d2dtracker_rl evaluate_intercept --model "$ck" --target-policy "$target" \
+    ros2 run shaheen_rl evaluate_intercept --model "$ck" --target-policy "$target" \
       --target-speed "$speed" --episodes "$EVAL_EPS" --seed "$SELECT_SEED" \
       --rank "$PAIR_RANK" "${STACK[@]}" --csv "$D/select.csv" --label "$name@$speed" \
       > "$D/select_$name.log" 2>&1

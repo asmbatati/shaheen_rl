@@ -100,12 +100,12 @@ as expected. Each stage peaks ~40 k then risks the over-train/collapse drift, so
 the 40 k checkpoint is kept for each. Reproduce:
 
 ```bash
-ros2 run d2dtracker_rl train_intercept --target-policy constant_velocity \
+ros2 run shaheen_rl train_intercept --target-policy constant_velocity \
     --init-from checkpoints/intercept/model_static_refine_40k.zip \
     --env-config config/refine_tight.yaml --learning-rate 1e-4 --ent-coef 0.1 \
     --timesteps 100000 --speed-factor 4 --pair-rank 0
 # ...then --target-policy evasive --init-from .../model_cv_40k.zip
-ros2 run d2dtracker_rl evaluate_intercept --model checkpoints/intercept/model_evasive_40k.zip \
+ros2 run shaheen_rl evaluate_intercept --model checkpoints/intercept/model_evasive_40k.zip \
     --target-policy evasive --target-speed 0.5 --episodes 10 --rank 2
 ```
 
@@ -196,7 +196,7 @@ are in [`summary.md`](docs/eval/2026-10-31_lockstep/summary.md).
   filter changed the command in 4–10 % of steps. It costs the baselines
   nothing in captures; PN takes longer on the static target (median 4.6 → 6.3 s).
 - **PN and pursuit capture 29–30 of 30 at 0.5 m/s.** The evaluator uses the
-  same `d2dtracker_interception.guidance` functions as the guidance node. In
+  same `shaheen_guidance.guidance` functions as the guidance node. In
   the benchmark scene, with a 2.4 m/s circling target, the same PN law captures
   4 of 19 (`drone_interception_sim/BENCHMARKS.md`), so its failure there depends
   on target speed and geometry.
@@ -450,15 +450,15 @@ every boot fails with `boot failed: ['mavros']` (undefined-symbol, exit 127):
 
 ```bash
 # 1. base run (keep the best ~100-120k checkpoint; later checkpoints collapse)
-ros2 run d2dtracker_rl train_intercept --timesteps 150000 --speed-factor 4 --pair-rank 0
+ros2 run shaheen_rl train_intercept --timesteps 150000 --speed-factor 4 --pair-rank 0
 # 2. refine: bootstrap the best base model with a tighter bell at a low LR
 #    (keep the best ~40k checkpoint; later checkpoints over-train into aggression)
-ros2 run d2dtracker_rl train_intercept --target-policy static \
+ros2 run shaheen_rl train_intercept --target-policy static \
     --init-from checkpoints/intercept/model_static_v4_best.zip \
     --env-config config/refine_tight.yaml --learning-rate 1e-4 \
     --ent-coef 0.1 --timesteps 100000 --speed-factor 4 --pair-rank 0
 # 3. evaluate deterministically on a disjoint stack (the real signal)
-ros2 run d2dtracker_rl evaluate_intercept \
+ros2 run shaheen_rl evaluate_intercept \
     --model checkpoints/intercept/model_static_refine_40k.zip \
     --episodes 10 --target-policy static --rank 2
 ```

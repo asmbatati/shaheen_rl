@@ -1,4 +1,4 @@
-# Python deps for d2dtracker_rl (no apt packages on ROS 2 Jazzy).
+# Python deps for shaheen_rl (no apt packages on ROS 2 Jazzy).
 # Install into the ROS Python environment:
 #   pip install --user --break-system-packages -r requirements.txt
 # If torch raises "cannot import name 'equal_valued' from sympy", repair sympy:

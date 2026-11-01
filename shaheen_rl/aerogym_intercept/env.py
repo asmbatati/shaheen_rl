@@ -16,7 +16,7 @@ import time
 import numpy as np
 
 from aerogym_px4.core.base_env import BasePX4Env
-from d2dtracker_interception.frames import odom_velocity_world
+from shaheen_guidance.frames import odom_velocity_world
 from aerogym_px4.core.px4_reset import gz_set_entity_pose
 from aerogym_px4.core.ros_interface import VehicleRosInterface
 

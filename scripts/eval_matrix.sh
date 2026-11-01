@@ -59,7 +59,7 @@ run_cell() {  # label target speed args...
     echo "skip $label $target $speed ($have rows)"; return
   fi
   echo "$(date +%T) $label target=$target speed=$speed eps=$EPS"
-  ros2 run d2dtracker_rl evaluate_intercept "$@" --label "$label" \
+  ros2 run shaheen_rl evaluate_intercept "$@" --label "$label" \
     --target-policy "$target" --target-speed "$speed" --episodes "$EPS" \
     --seed "$SEED" --rank "$PAIR_RANK" --domain-base "$DOMAIN_BASE" \
     --speed-factor "$SPEED_FACTOR" --step-mode "$STEP_MODE" \

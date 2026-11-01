@@ -6,8 +6,8 @@ stacks up) is ALREADY running. Brings up a single PX4-in-the-loop Gymnasium env
 (n_envs=1; PX4 SITL cannot be massively parallelized) and trains PPO (high-level
 stage) or SAC (low-level stage).
 
-  ros2 run d2dtracker_rl train --stage high --config <pkg>/config/train_ppo_high_level.yaml
-  ros2 run d2dtracker_rl train --stage low  --config <...>/train_sac_low_level.yaml \
+  ros2 run shaheen_rl train --stage high --config <pkg>/config/train_ppo_high_level.yaml
+  ros2 run shaheen_rl train --stage low  --config <...>/train_sac_low_level.yaml \
         --init-from checkpoints/high/best_model.zip
 """
 import argparse

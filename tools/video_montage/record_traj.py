@@ -1,7 +1,7 @@
 import os, numpy as np
 os.environ['RMW_IMPLEMENTATION'] = 'rmw_fastrtps_cpp'
-from d2dtracker_rl.aerogym_intercept import task  # noqa
-from d2dtracker_rl.aerogym_intercept.worker import build_intercept_worker_env
+from shaheen_rl.aerogym_intercept import task  # noqa
+from shaheen_rl.aerogym_intercept.worker import build_intercept_worker_env
 from stable_baselines3 import SAC
 
 PKG = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

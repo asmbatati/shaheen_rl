@@ -1,4 +1,4 @@
-# d2dtracker_rl
+# shaheen_rl
 
 Reinforcement learning for **drone-to-drone interception** (Gymnasium + SB3),
 built on the [AeroGym-PX4](https://github.com/asmbatati/AeroGym-PX4)
@@ -40,18 +40,18 @@ forced to FastRTPS inside the stack.
 
 ```bash
 # stage 1: static target (SAC, managed two-vehicle stack, 4x sim)
-ros2 run d2dtracker_rl train_intercept --timesteps 150000 --speed-factor 4 --pair-rank 0
+ros2 run shaheen_rl train_intercept --timesteps 150000 --speed-factor 4 --pair-rank 0
 # then refine / move on, bootstrapping the best checkpoint (see RESULTS.md for the
 # exact June 2026 recipe: --env-config config/refine_tight.yaml --learning-rate 1e-4
 # --ent-coef 0.1), e.g.:
-ros2 run d2dtracker_rl train_intercept --target-policy constant_velocity \
+ros2 run shaheen_rl train_intercept --target-policy constant_velocity \
     --init-from checkpoints/intercept/model_static_refine_40k.zip \
     --env-config config/refine_tight.yaml --learning-rate 1e-4 --ent-coef 0.1 \
     --timesteps 100000 --speed-factor 4 --pair-rank 0 --device cpu
 # deterministic evaluation (learned policy, then the baselines on the same seeds)
-ros2 run d2dtracker_rl evaluate_intercept --model checkpoints/intercept/model_evasive_40k.zip \
+ros2 run shaheen_rl evaluate_intercept --model checkpoints/intercept/model_evasive_40k.zip \
     --target-policy evasive --target-speed 0.5 --episodes 30 --seed 200 --rank 1 --csv eval.csv
-ros2 run d2dtracker_rl evaluate_intercept --policy pn --target-policy evasive --episodes 30 \
+ros2 run shaheen_rl evaluate_intercept --policy pn --target-policy evasive --episodes 30 \
     --seed 200 --rank 1 --csv eval.csv
 ```
 
@@ -72,6 +72,17 @@ troubleshooting: see AeroGym-PX4's `TRAINING.md` (partitions here are
 
 ## Legacy
 
-`d2dtracker_rl/envs/` (the pre-AeroGym single-process envs), `train.py`,
+`shaheen_rl/envs/` (the pre-AeroGym single-process envs), `train.py`,
 `evaluate.py`, `curriculum.py` and the launch files are the original
 implementation, kept for reference; new work targets `aerogym_intercept/`.
+
+## Credit
+
+This package began as `d2dtracker_rl` within Mohamed Abdelkader's
+([mzahana](https://github.com/mzahana)) D2DTracker project. D2DTracker is the
+earlier work this builds on; cite it from
+[`d2dtracker_trajectory_prediction`](https://github.com/mzahana/d2dtracker_trajectory_prediction)
+(`CITATION.cff`). Commits from before the rename keep the old name.
+
+The checkpoints from before the rename load unchanged: the old name survives
+only in their `tensorboard_log` metadata, which nothing reads when evaluating.

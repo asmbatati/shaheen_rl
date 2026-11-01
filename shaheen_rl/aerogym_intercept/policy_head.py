@@ -27,7 +27,7 @@ at ``start_alt``, the altitude the policy was trained from) -> Pursue (policy)
 """
 import math
 
-from d2dtracker_interception.frames import body_to_world
+from shaheen_guidance.frames import body_to_world
 from mavros_msgs.msg import PositionTarget, State
 from mavros_msgs.srv import CommandBool, SetMode
 from nav_msgs.msg import Odometry

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Evaluate a trained interception policy against the running (rendered) sim.
 
-  ros2 run d2dtracker_rl evaluate --stage high --model checkpoints/high/final_model.zip
+  ros2 run shaheen_rl evaluate --stage high --model checkpoints/high/final_model.zip
 """
 import argparse
 import os

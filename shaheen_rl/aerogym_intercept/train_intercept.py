@@ -1,11 +1,11 @@
 """SB3 trainer for the interception task on the AeroGym-PX4 core.
 
-    ros2 run d2dtracker_rl train_intercept --timesteps 200000 --speed-factor 4
-    ros2 run d2dtracker_rl train_intercept --target-policy constant_velocity \
+    ros2 run shaheen_rl train_intercept --timesteps 200000 --speed-factor 4
+    ros2 run shaheen_rl train_intercept --target-policy constant_velocity \
         --init-from checkpoints/intercept/final_model.zip
 
 Curriculum axis = the target policy (static -> constant_velocity -> evasive),
-chained with --init-from, exactly like the original d2dtracker_rl curriculum.
+chained with --init-from, exactly like the original shaheen_rl curriculum.
 """
 import argparse
 import os

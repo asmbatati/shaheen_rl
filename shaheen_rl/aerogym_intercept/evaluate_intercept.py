@@ -1,6 +1,6 @@
 """Evaluate an interception policy: capture rate / time / min range.
 
-    ros2 run d2dtracker_rl evaluate_intercept \
+    ros2 run shaheen_rl evaluate_intercept \
         --model checkpoints/intercept/final_model.zip --episodes 10 \
         --target-policy constant_velocity
 
@@ -8,14 +8,14 @@ Scripted baselines run in the SAME env, on the same seeds and action interface
 (normalized ENU velocity x ``v_max``), so their rows compare directly with the
 learned policy's:
 
-* ``--policy pn``      -- the PN velocity law of ``d2dtracker_interception``
+* ``--policy pn``      -- the PN velocity law of ``shaheen_guidance``
   (N 3, closing speed 6 m/s, cap ``v_max``), the sim benchmark's PN baseline;
 * ``--policy pn_int``   -- constant-speed PN integrated on the commanded
   velocity (``pn_integrated_velocity``, speed 6 m/s);
 * ``--policy pursuit`` -- pure pursuit: fly the line of sight at ``v_max``.
 
 ``--cbf`` passes every action (learned or scripted) through the CBF safety
-filter of ``d2dtracker_interception.safety`` (altitude floor ``--cbf-z-min``,
+filter of ``shaheen_guidance.safety`` (altitude floor ``--cbf-z-min``,
 ceiling and geofence just inside the env's arena bounds).
 
 ``--csv`` appends one row per episode; ``--traj-dir`` saves each episode's
@@ -58,13 +58,13 @@ class ScriptedPolicy:
         ipos, ivel = st['position'], st['velocity']
         tpos, tvel = st['target_position'], st['target_velocity']
         if self.kind == 'pn_int':
-            from d2dtracker_interception.guidance import pn_integrated_velocity
+            from shaheen_guidance.guidance import pn_integrated_velocity
             v = pn_integrated_velocity(self.v_cmd, ipos, ivel, tpos, tvel,
                                        self.closing_speed, N=self.nav_gain,
                                        dt=self.dt)
             self.v_cmd = v
         elif self.kind == 'pn':
-            from d2dtracker_interception.guidance import pn_velocity_command
+            from shaheen_guidance.guidance import pn_velocity_command
             v = pn_velocity_command(ipos, ivel, tpos, tvel, self.v_max,
                                     N=self.nav_gain, dt=self.dt,
                                     closing_speed=self.closing_speed)
@@ -141,7 +141,7 @@ def main(args=None):
         label = args.label or args.policy
     cbf = None
     if args.cbf:
-        from d2dtracker_interception.safety import CBFVelocityFilter
+        from shaheen_guidance.safety import CBFVelocityFilter
         cbf = CBFVelocityFilter(
             z_min=args.cbf_z_min, z_max=float(env.cfg['arena_alt_max']) - 2.0,
             fence_radius=float(env.cfg['arena_horiz']) - 5.0, alpha=args.cbf_alpha)

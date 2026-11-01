@@ -8,7 +8,7 @@ chaining checkpoints so later stages bootstrap from earlier ones.
 The simulation must already be running (one drone for high-level, two for the
 interception scenario). Example:
 
-  ros2 run d2dtracker_rl curriculum --config <pkg>/config/curriculum.yaml
+  ros2 run shaheen_rl curriculum --config <pkg>/config/curriculum.yaml
 """
 import argparse
 import os
@@ -52,7 +52,7 @@ def main(argv=None):
             stage_cfg = os.path.join(cfg_dir, stage_cfg)
         init_from = stage.get('init_from', '') or prev_ckpt
 
-        cmd = ['ros2', 'run', 'd2dtracker_rl', 'train',
+        cmd = ['ros2', 'run', 'shaheen_rl', 'train',
                '--stage', env_stage, '--name', name,
                '--ckptdir', args.ckptdir, '--logdir', args.logdir]
         if stage_cfg:
