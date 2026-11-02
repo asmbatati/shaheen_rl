@@ -35,7 +35,7 @@ setup(
     maintainer='Abdulrahman S. Al-Batati',
     maintainer_email='asmalbatati@hotmail.com',
     description='Reinforcement learning for drone-to-drone interception (Gymnasium + SB3).',
-    license='MIT',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
