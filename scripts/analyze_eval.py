@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Summarize an eval_matrix.sh run: tables and figures for the RL paper.
+"""
+Summarize an eval_matrix.sh run: tables and figures for the RL paper.
 
 Reads ``<run>/episodes.csv`` (one row per deterministic episode) and writes to
 ``<run>/report/``:

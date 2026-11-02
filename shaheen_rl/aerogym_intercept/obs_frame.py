@@ -1,4 +1,5 @@
-"""Frame of the interceptor's velocity in the observation (and reward).
+"""
+Frame of the interceptor's velocity in the observation (and reward).
 
 MAVROS publishes the odom twist in the BODY frame. The checkpoints trained
 before C7 feed it as-is, so ``'body'`` stays the default and they keep loading
@@ -9,6 +10,7 @@ evaluated and flown in the frame it was trained in.
 
 Pure numpy (no ROS), so it is unit-tested directly.
 """
+
 from shaheen_guidance.frames import body_to_world
 
 VELOCITY_FRAMES = ('body', 'world')
@@ -22,7 +24,8 @@ def check_velocity_frame(frame):
 
 
 def apply_velocity_frame(state, frame):
-    """Set ``state['velocity']`` in `frame`; `state` holds the raw body twist.
+    """
+    Set ``state['velocity']`` in `frame`; `state` holds the raw body twist.
 
     Returns `state`, changed in place.
     """

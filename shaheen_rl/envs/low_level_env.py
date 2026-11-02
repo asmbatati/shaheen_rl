@@ -1,10 +1,12 @@
-"""Low-level interception env (curriculum stage 2).
+"""
+Low-level interception env (curriculum stage 2).
 
 The agent outputs body angular rates + collective thrust (the expressive but
 hard-to-train interface). Observation is extended with the interceptor's
 orientation (quaternion) and body angular velocity, which attitude/rate control
 needs. Train with an off-policy algorithm (SAC) for sample efficiency.
 """
+
 from gymnasium import spaces
 import numpy as np
 
@@ -29,9 +31,11 @@ class LowLevelInterceptEnv(BaseInterceptEnv):
         return np.array([q.x, q.y, q.z, q.w, w.x, w.y, w.z], dtype=np.float32)
 
     def _build_action_space(self):
-        return spaces.Box(low=np.array([-1, -1, -1, 0], dtype=np.float32),
-                          high=np.array([1, 1, 1, 1], dtype=np.float32),
-                          dtype=np.float32)
+        return spaces.Box(
+            low=np.array([-1, -1, -1, 0], dtype=np.float32),
+            high=np.array([1, 1, 1, 1], dtype=np.float32),
+            dtype=np.float32,
+        )
 
     def _apply_action(self, action):
         rr = float(np.clip(action[0], -1, 1)) * self.r_max

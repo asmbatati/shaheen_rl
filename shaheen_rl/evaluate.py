@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Evaluate a trained interception policy against the running (rendered) sim.
-
-  ros2 run shaheen_rl evaluate --stage high --model checkpoints/high/final_model.zip
 """
+Evaluate a trained interception policy against the running (rendered) sim.
+
+ros2 run shaheen_rl evaluate --stage high --model checkpoints/high/final_model.zip
+"""
+
 import argparse
 import os
 
 import numpy as np
 import rclpy
-import yaml
-
 from stable_baselines3 import PPO, SAC
+import yaml
 
 from .envs.high_level_env import HighLevelInterceptEnv
 from .envs.low_level_env import LowLevelInterceptEnv

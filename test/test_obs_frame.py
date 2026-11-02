@@ -1,14 +1,14 @@
 """Unit tests for the velocity-frame option (C7)."""
+
 import math
 
 import numpy as np
 import pytest
-
 from shaheen_rl.aerogym_intercept.obs_frame import apply_velocity_frame
 
 
 def _state(yaw):
-    q = [0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2)]   # x, y, z, w
+    q = [0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2)]  # x, y, z, w
     return {'quaternion': np.array(q), 'velocity': np.array([1.0, 0.0, 0.5])}
 
 

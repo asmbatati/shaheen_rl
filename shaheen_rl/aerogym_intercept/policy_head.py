@@ -1,4 +1,5 @@
-"""Fly a trained interception policy in the full two-drone sim (RL head).
+"""
+Fly a trained interception policy in the full two-drone sim (RL head).
 
 The orchestration head for ``drone_interception_sim``'s
 ``pipeline.launch.py orchestrator:=rl``: it runs an SB3 policy trained in the
@@ -27,9 +28,9 @@ Phases: Wait (both odoms + FCU) -> Climb (arm, OFFBOARD, hold the current xy
 at ``start_alt``, the altitude the policy was trained from) -> Pursue (policy)
 -> Return (AUTO.RTL once the true range is inside ``capture_radius``).
 """
+
 import math
 
-from shaheen_guidance.frames import body_to_world
 from mavros_msgs.msg import PositionTarget, State
 from mavros_msgs.srv import CommandBool, SetMode
 from nav_msgs.msg import Odometry
@@ -37,6 +38,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
+from shaheen_guidance.frames import body_to_world
 from std_msgs.msg import String
 
 from .obs_frame import apply_velocity_frame, check_velocity_frame
@@ -69,7 +71,9 @@ class PolicyHead(Node):
         self.deterministic = bool(g('deterministic').value)
 
         from aerogym_px4.tasks.base import TASKS
+
         from . import task  # noqa: F401  (registers 'intercept')
+
         self.task = TASKS['intercept']({'capture_radius': self.capture_radius})
         self.model = self._load(g('model').value)
 
@@ -81,16 +85,17 @@ class PolicyHead(Node):
         self.t0 = None
         self._ticks = 0
 
-        self.create_subscription(Odometry, 'interceptor_odom',
-                                 lambda m: setattr(self, 'odom', m),
-                                 qos_profile_sensor_data)
-        self.create_subscription(Odometry, 'target_odom',
-                                 lambda m: setattr(self, 'todom', m),
-                                 qos_profile_sensor_data)
-        self.create_subscription(State, 'mavros/state',
-                                 lambda m: setattr(self, 'state', m), 10)
-        self.sp_pub = self.create_publisher(PositionTarget,
-                                            'mavros/setpoint_raw/local', 10)
+        self.create_subscription(
+            Odometry,
+            'interceptor_odom',
+            lambda m: setattr(self, 'odom', m),
+            qos_profile_sensor_data,
+        )
+        self.create_subscription(
+            Odometry, 'target_odom', lambda m: setattr(self, 'todom', m), qos_profile_sensor_data
+        )
+        self.create_subscription(State, 'mavros/state', lambda m: setattr(self, 'state', m), 10)
+        self.sp_pub = self.create_publisher(PositionTarget, 'mavros/setpoint_raw/local', 10)
         self.phase_pub = self.create_publisher(String, 'mission/phase', 10)
         self.arm_cli = self.create_client(CommandBool, 'mavros/cmd/arming')
         self.mode_cli = self.create_client(SetMode, 'mavros/set_mode')
@@ -100,6 +105,7 @@ class PolicyHead(Node):
 
     def _load(self, path):
         from stable_baselines3 import PPO, SAC
+
         for cls in (SAC, PPO):
             try:
                 return cls.load(path, device='cpu')
@@ -113,21 +119,22 @@ class PolicyHead(Node):
         q, w = self.odom.pose.pose.orientation, self.odom.twist.twist.angular
         tp, to = self.todom.pose.pose.position, self.todom.pose.pose.orientation
         tv = self.todom.twist.twist.linear
-        st = {'position': np.array([p.x, p.y, p.z]),
-              'velocity': np.array([v.x, v.y, v.z]),
-              'quaternion': np.array([q.x, q.y, q.z, q.w]),
-              'omega': np.array([w.x, w.y, w.z]),
-              'target_position': np.array([tp.x, tp.y, tp.z]) + self.tspawn,
-              'target_velocity': body_to_world([to.x, to.y, to.z, to.w],
-                                               [tv.x, tv.y, tv.z])}
+        st = {
+            'position': np.array([p.x, p.y, p.z]),
+            'velocity': np.array([v.x, v.y, v.z]),
+            'quaternion': np.array([q.x, q.y, q.z, q.w]),
+            'omega': np.array([w.x, w.y, w.z]),
+            'target_position': np.array([tp.x, tp.y, tp.z]) + self.tspawn,
+            'target_velocity': body_to_world([to.x, to.y, to.z, to.w], [tv.x, tv.y, tv.z]),
+        }
         return apply_velocity_frame(st, self.velocity_frame)
 
     def _obs(self, st, t):
-        base = np.concatenate([st['position'] / self.ps, st['velocity'] / self.vs,
-                               st['quaternion'], st['omega']])
+        base = np.concatenate(
+            [st['position'] / self.ps, st['velocity'] / self.vs, st['quaternion'], st['omega']]
+        )
         obs = np.concatenate([base, self.task.task_obs(st, t)]).astype(np.float32)
-        return np.clip(np.nan_to_num(obs, nan=0.0, posinf=100.0, neginf=-100.0),
-                       -100.0, 100.0)
+        return np.clip(np.nan_to_num(obs, nan=0.0, posinf=100.0, neginf=-100.0), -100.0, 100.0)
 
     def _range(self, st):
         return float(np.linalg.norm(st['target_position'] - st['position']))
@@ -137,15 +144,27 @@ class PolicyHead(Node):
         sp = PositionTarget()
         sp.header.stamp = self.get_clock().now().to_msg()
         sp.coordinate_frame = PositionTarget.FRAME_LOCAL_NED
-        ign = (PositionTarget.IGNORE_AFX + PositionTarget.IGNORE_AFY
-               + PositionTarget.IGNORE_AFZ + PositionTarget.IGNORE_YAW_RATE)
+        ign = (
+            PositionTarget.IGNORE_AFX
+            + PositionTarget.IGNORE_AFY
+            + PositionTarget.IGNORE_AFZ
+            + PositionTarget.IGNORE_YAW_RATE
+        )
         if vel is not None:
-            sp.type_mask = (ign + PositionTarget.IGNORE_PX + PositionTarget.IGNORE_PY
-                            + PositionTarget.IGNORE_PZ)
+            sp.type_mask = (
+                ign
+                + PositionTarget.IGNORE_PX
+                + PositionTarget.IGNORE_PY
+                + PositionTarget.IGNORE_PZ
+            )
             sp.velocity.x, sp.velocity.y, sp.velocity.z = (float(c) for c in vel)
         else:
-            sp.type_mask = (ign + PositionTarget.IGNORE_VX + PositionTarget.IGNORE_VY
-                            + PositionTarget.IGNORE_VZ)
+            sp.type_mask = (
+                ign
+                + PositionTarget.IGNORE_VX
+                + PositionTarget.IGNORE_VY
+                + PositionTarget.IGNORE_VZ
+            )
             sp.position.x, sp.position.y, sp.position.z = (float(c) for c in pos)
         sp.yaw = float(yaw)
         self.sp_pub.publish(sp)
@@ -159,12 +178,14 @@ class PolicyHead(Node):
         st = self._world()
         if self.phase in ('Wait', 'Climb'):
             if self.hold is None:
-                self.hold = np.array([st['position'][0], st['position'][1],
-                                      self.start_alt])
+                self.hold = np.array([st['position'][0], st['position'][1], self.start_alt])
             self._publish(pos=self.hold)
-            if (self.phase == 'Climb' and self.state.armed
-                    and self.state.mode == 'OFFBOARD'
-                    and st['position'][2] >= self.start_alt - 0.3):
+            if (
+                self.phase == 'Climb'
+                and self.state.armed
+                and self.state.mode == 'OFFBOARD'
+                and st['position'][2] >= self.start_alt - 0.3
+            ):
                 self._to('Pursue')
                 self.t0 = self.get_clock().now().nanoseconds * 1e-9
         elif self.phase == 'Pursue':
@@ -173,8 +194,7 @@ class PolicyHead(Node):
                 self._to('Return')
                 return
             t = self.get_clock().now().nanoseconds * 1e-9 - self.t0
-            action, _ = self.model.predict(self._obs(st, t),
-                                           deterministic=self.deterministic)
+            action, _ = self.model.predict(self._obs(st, t), deterministic=self.deterministic)
             v = np.clip(np.asarray(action, float)[:3], -1.0, 1.0) * self.v_max
             self._publish(vel=v, yaw=math.atan2(v[1], v[0]))
 

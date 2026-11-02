@@ -19,5 +19,6 @@ import pytest
 @pytest.mark.linter
 @pytest.mark.pep257
 def test_pep257():
-    rc = main(argv=['.', 'test'])
+    # external/ is the AeroGym-PX4 submodule, linted in its own repository
+    rc = main(argv=['.', 'test', '--exclude', 'external'])
     assert rc == 0, 'Found code style errors / warnings'

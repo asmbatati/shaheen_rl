@@ -1,4 +1,5 @@
-"""ROS 2 interface for the interception RL environments.
+"""
+ROS 2 interface for the interception RL environments.
 
 A single rclpy node, spun by a background daemon thread, caches the latest
 interceptor/target state and exposes thread-safe getters plus actuator helpers
@@ -6,6 +7,7 @@ interceptor/target state and exposes thread-safe getters plus actuator helpers
 the caches in ``step``/``reset`` instead of spinning inline - this is the core
 fix over the old code, which never refreshed state inside ``step``.
 """
+
 import threading
 
 from mavros_msgs.msg import AttitudeTarget, PositionTarget, State
@@ -13,8 +15,13 @@ from mavros_msgs.srv import CommandBool, SetMode
 from nav_msgs.msg import Odometry
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
-from rclpy.qos import (DurabilityPolicy, HistoryPolicy, QoSProfile,
-                       ReliabilityPolicy, qos_profile_sensor_data)
+from rclpy.qos import (
+    DurabilityPolicy,
+    HistoryPolicy,
+    qos_profile_sensor_data,
+    QoSProfile,
+    ReliabilityPolicy,
+)
 
 
 class DroneRosInterface(Node):
@@ -28,38 +35,45 @@ class DroneRosInterface(Node):
         self._interceptor_state = State()
         self._target_odom = None
 
-        state_qos = QoSProfile(reliability=ReliabilityPolicy.BEST_EFFORT,
-                               durability=DurabilityPolicy.VOLATILE,
-                               history=HistoryPolicy.KEEP_LAST, depth=10)
+        state_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+        )
 
         self.create_subscription(
-            Odometry, f'/{interceptor_ns}/mavros/local_position/odom',
-            self._int_odom_cb, qos_profile_sensor_data)
+            Odometry,
+            f'/{interceptor_ns}/mavros/local_position/odom',
+            self._int_odom_cb,
+            qos_profile_sensor_data,
+        )
         self.create_subscription(
-            State, f'/{interceptor_ns}/mavros/state',
-            self._int_state_cb, state_qos)
+            State, f'/{interceptor_ns}/mavros/state', self._int_state_cb, state_qos
+        )
         self.create_subscription(
-            Odometry, f'/{target_ns}/mavros/local_position/odom',
-            self._tgt_odom_cb, qos_profile_sensor_data)
+            Odometry,
+            f'/{target_ns}/mavros/local_position/odom',
+            self._tgt_odom_cb,
+            qos_profile_sensor_data,
+        )
 
         self.pos_pub = self.create_publisher(
-            PositionTarget, f'/{interceptor_ns}/mavros/setpoint_raw/local',
-            qos_profile_sensor_data)
+            PositionTarget, f'/{interceptor_ns}/mavros/setpoint_raw/local', qos_profile_sensor_data
+        )
         self.att_pub = self.create_publisher(
-            AttitudeTarget, f'/{interceptor_ns}/mavros/setpoint_raw/attitude',
-            qos_profile_sensor_data)
+            AttitudeTarget,
+            f'/{interceptor_ns}/mavros/setpoint_raw/attitude',
+            qos_profile_sensor_data,
+        )
         self.tgt_pos_pub = self.create_publisher(
-            PositionTarget, f'/{target_ns}/mavros/setpoint_raw/local',
-            qos_profile_sensor_data)
+            PositionTarget, f'/{target_ns}/mavros/setpoint_raw/local', qos_profile_sensor_data
+        )
 
-        self.arm_client = self.create_client(
-            CommandBool, f'/{interceptor_ns}/mavros/cmd/arming')
-        self.mode_client = self.create_client(
-            SetMode, f'/{interceptor_ns}/mavros/set_mode')
-        self.tgt_arm_client = self.create_client(
-            CommandBool, f'/{target_ns}/mavros/cmd/arming')
-        self.tgt_mode_client = self.create_client(
-            SetMode, f'/{target_ns}/mavros/set_mode')
+        self.arm_client = self.create_client(CommandBool, f'/{interceptor_ns}/mavros/cmd/arming')
+        self.mode_client = self.create_client(SetMode, f'/{interceptor_ns}/mavros/set_mode')
+        self.tgt_arm_client = self.create_client(CommandBool, f'/{target_ns}/mavros/cmd/arming')
+        self.tgt_mode_client = self.create_client(SetMode, f'/{target_ns}/mavros/set_mode')
 
         self._executor = SingleThreadedExecutor()
         self._executor.add_node(self)
@@ -100,10 +114,15 @@ class DroneRosInterface(Node):
         sp = PositionTarget()
         sp.header.stamp = self.get_clock().now().to_msg()
         sp.coordinate_frame = PositionTarget.FRAME_LOCAL_NED
-        sp.type_mask = (PositionTarget.IGNORE_VX + PositionTarget.IGNORE_VY +
-                        PositionTarget.IGNORE_VZ + PositionTarget.IGNORE_AFX +
-                        PositionTarget.IGNORE_AFY + PositionTarget.IGNORE_AFZ +
-                        PositionTarget.IGNORE_YAW_RATE)
+        sp.type_mask = (
+            PositionTarget.IGNORE_VX
+            + PositionTarget.IGNORE_VY
+            + PositionTarget.IGNORE_VZ
+            + PositionTarget.IGNORE_AFX
+            + PositionTarget.IGNORE_AFY
+            + PositionTarget.IGNORE_AFZ
+            + PositionTarget.IGNORE_YAW_RATE
+        )
         sp.position.x, sp.position.y, sp.position.z = float(x), float(y), float(z)
         sp.yaw = float(yaw)
         self.pos_pub.publish(sp)
@@ -112,10 +131,15 @@ class DroneRosInterface(Node):
         sp = PositionTarget()
         sp.header.stamp = self.get_clock().now().to_msg()
         sp.coordinate_frame = PositionTarget.FRAME_LOCAL_NED
-        sp.type_mask = (PositionTarget.IGNORE_PX + PositionTarget.IGNORE_PY +
-                        PositionTarget.IGNORE_PZ + PositionTarget.IGNORE_AFX +
-                        PositionTarget.IGNORE_AFY + PositionTarget.IGNORE_AFZ +
-                        PositionTarget.IGNORE_YAW_RATE)
+        sp.type_mask = (
+            PositionTarget.IGNORE_PX
+            + PositionTarget.IGNORE_PY
+            + PositionTarget.IGNORE_PZ
+            + PositionTarget.IGNORE_AFX
+            + PositionTarget.IGNORE_AFY
+            + PositionTarget.IGNORE_AFZ
+            + PositionTarget.IGNORE_YAW_RATE
+        )
         sp.velocity.x, sp.velocity.y, sp.velocity.z = float(vx), float(vy), float(vz)
         sp.yaw = float(yaw)
         self.pos_pub.publish(sp)
@@ -134,10 +158,15 @@ class DroneRosInterface(Node):
         sp = PositionTarget()
         sp.header.stamp = self.get_clock().now().to_msg()
         sp.coordinate_frame = PositionTarget.FRAME_LOCAL_NED
-        sp.type_mask = (PositionTarget.IGNORE_VX + PositionTarget.IGNORE_VY +
-                        PositionTarget.IGNORE_VZ + PositionTarget.IGNORE_AFX +
-                        PositionTarget.IGNORE_AFY + PositionTarget.IGNORE_AFZ +
-                        PositionTarget.IGNORE_YAW_RATE)
+        sp.type_mask = (
+            PositionTarget.IGNORE_VX
+            + PositionTarget.IGNORE_VY
+            + PositionTarget.IGNORE_VZ
+            + PositionTarget.IGNORE_AFX
+            + PositionTarget.IGNORE_AFY
+            + PositionTarget.IGNORE_AFZ
+            + PositionTarget.IGNORE_YAW_RATE
+        )
         sp.position.x, sp.position.y, sp.position.z = float(x), float(y), float(z)
         sp.yaw = float(yaw)
         self.tgt_pos_pub.publish(sp)

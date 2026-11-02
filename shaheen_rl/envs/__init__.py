@@ -1,4 +1,5 @@
 """Gymnasium env registration for the interception environments."""
+
 from gymnasium.envs.registration import register
 
 from .base_intercept_env import BaseInterceptEnv

@@ -1,4 +1,5 @@
-"""Interception task plugin for the AeroGym-PX4 environment.
+"""
+Interception task plugin for the AeroGym-PX4 environment.
 
 Registers ``intercept`` into aerogym's task registry — from THIS package, so
 the playground itself stays interception-free. The task consumes the enriched
@@ -20,9 +21,9 @@ Reward design carries AeroGym's measured shaping lessons:
   upward gradient; the alive bonus keeps the living baseline non-negative so the
   agent is never tempted to crash early just to stop bleeding step penalties.
 """
-import numpy as np
 
-from aerogym_px4.tasks.base import Task, register
+from aerogym_px4.tasks.base import register, Task
+import numpy as np
 
 
 @register('intercept')
@@ -32,8 +33,7 @@ class InterceptTask(Task):
     obs_dim = 10  # rel_pos/ps (3) + rel_vel/vs (3) + range/ps (1) + LOS (3)
 
     def configure(self, cfg):
-        self.spawn_center = np.asarray(
-            cfg.get('interceptor_spawn', [0.0, 0.0, 5.0]), dtype=float)
+        self.spawn_center = np.asarray(cfg.get('interceptor_spawn', [0.0, 0.0, 5.0]), dtype=float)
         self.spawn_jitter = float(cfg.get('spawn_jitter', 2.0))
         self.capture_radius = float(cfg.get('capture_radius', 1.0))
         self.pos_scale = float(cfg.get('pos_scale', 30.0))
@@ -87,12 +87,14 @@ class InterceptTask(Task):
     def task_obs(self, state, t):
         rel_pos, rel_vel, rng = self._rel(state)
         los = rel_pos / rng if rng > 1e-6 else np.zeros(3)
-        return np.concatenate([
-            rel_pos / self.pos_scale,
-            rel_vel / self.vel_scale,
-            [rng / self.pos_scale],
-            los,
-        ]).astype(np.float32)
+        return np.concatenate(
+            [
+                rel_pos / self.pos_scale,
+                rel_vel / self.vel_scale,
+                [rng / self.pos_scale],
+                los,
+            ]
+        ).astype(np.float32)
 
     def reward(self, state, action, prev_state, t):
         rel_pos, _, rng = self._rel(state)
@@ -106,10 +108,9 @@ class InterceptTask(Task):
         # velocity heading aligned with the line of sight to the target
         speed = float(np.linalg.norm(state['velocity']))
         if speed > 1e-3 and rng > 1e-3:
-            r += self.w_align * float(
-                np.dot(state['velocity'], rel_pos) / (speed * rng))
+            r += self.w_align * float(np.dot(state['velocity'], rel_pos) / (speed * rng))
         # near-field precision bell (strong, tight: dominates the final approach)
-        r += self.w_prec * float(np.exp(-(rng / self.prec_sigma) ** 2))
+        r += self.w_prec * float(np.exp(-((rng / self.prec_sigma) ** 2)))
         # DENSE altitude-floor penalty: continuous upward gradient above the
         # crash line so the deterministic policy never learns to sink into it
         pos = state['position']

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Plot the interception curriculum's learning curves from the SB3 train logs.
+"""
+Plot the interception curriculum's learning curves from the SB3 train logs.
 
 Parses the stdout tables Stable-Baselines3 prints during ``train_intercept``
 (``rollout/ep_rew_mean``, ``rollout/ep_len_mean``, ``time/total_timesteps``)

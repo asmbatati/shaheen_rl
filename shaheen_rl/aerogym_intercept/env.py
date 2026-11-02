@@ -1,4 +1,5 @@
-"""Interception environment: AeroGym's BasePX4Env + a second (target) vehicle.
+"""
+Interception environment: AeroGym's BasePX4Env + a second (target) vehicle.
 
 The interceptor side is pure AeroGym (sim-time stepping, rescue ladder, NaN
 guards, action interfaces). This subclass adds:
@@ -11,28 +12,28 @@ guards, action interfaces). This subclass adds:
   curriculum axis) driven once per control tick,
 * target episode reset: teleport + re-arm/OFFBOARD hold.
 """
+
 import time
 
-import numpy as np
-
 from aerogym_px4.core.base_env import BasePX4Env
-from shaheen_guidance.frames import odom_velocity_world
 from aerogym_px4.core.px4_reset import gz_set_entity_pose
 from aerogym_px4.core.ros_interface import VehicleRosInterface
+import numpy as np
+from shaheen_guidance.frames import odom_velocity_world
 
-from ..target_policy import make_target_policy
 from .obs_frame import apply_velocity_frame, check_velocity_frame
+from ..target_policy import make_target_policy
 
 INTERCEPT_DEFAULTS = {
     'task': 'intercept',
     'target_ns': 'target',
     'target_entity': 'x500_1',
-    'target_spawn': [10.0, 0.0, 0.0],     # world offset of the target's EKF origin
+    'target_spawn': [10.0, 0.0, 0.0],  # world offset of the target's EKF origin
     'target_altitude': 5.0,
     'target_policy': 'static',
     'target_policy_params': {},
     'target_jitter': 3.0,
-    'velocity_frame': 'body',             # interceptor velocity in the obs: body | world (C7)
+    'velocity_frame': 'body',  # interceptor velocity in the obs: body | world (C7)
     'episode_steps': 400,
     'arena_horiz': 60.0,
     'v_max': 8.0,
@@ -52,11 +53,12 @@ class InterceptEnv(BasePX4Env):
         check_velocity_frame(cfg['velocity_frame'])
         super().__init__(config=cfg, ros=ros, sim=sim)
         self.target_ros = VehicleRosInterface(
-            self.cfg['target_ns'], node_name='aerogym_target_interface')
+            self.cfg['target_ns'], node_name='aerogym_target_interface'
+        )
         self._tspawn = np.asarray(self.cfg['target_spawn'], dtype=float)
         self._target_policy = None
         self._target_start = self._tspawn + [0, 0, self.cfg['target_altitude']]
-        self.target_ready = False   # set by reset(): target airborne at its start
+        self.target_ready = False  # set by reset(): target airborne at its start
 
     # --- state ---------------------------------------------------------------
     def _state(self):
@@ -84,7 +86,8 @@ class InterceptEnv(BasePX4Env):
         x, y, z = self._target_policy.setpoint(self._t)
         # policy works in world frame; convert to the target's odom frame
         self.target_ros.publish_position_target(
-            x - self._tspawn[0], y - self._tspawn[1], z - self._tspawn[2])
+            x - self._tspawn[0], y - self._tspawn[1], z - self._tspawn[2]
+        )
         st = self.target_ros.state()
         if st.mode != 'OFFBOARD':
             self.target_ros.set_mode('OFFBOARD')
@@ -98,8 +101,11 @@ class InterceptEnv(BasePX4Env):
     # --- target recovery -------------------------------------------------------
     def _target_airborne(self):
         todom = self.target_ros.odom()
-        return (todom is not None and todom.pose.pose.position.z > 1.0
-                and self.target_ros.state().armed)
+        return (
+            todom is not None
+            and todom.pose.pose.position.z > 1.0
+            and self.target_ros.state().armed
+        )
 
     def _target_status(self, start):
         st, todom = self.target_ros.state(), self.target_ros.odom()
@@ -107,8 +113,10 @@ class InterceptEnv(BasePX4Env):
             return f'armed={st.armed} mode={st.mode} no odometry'
         p = todom.pose.pose.position
         pos = np.array([p.x, p.y, p.z]) + self._tspawn
-        return (f'armed={st.armed} mode={st.mode} z={p.z:.2f} '
-                f'off_start={np.linalg.norm(pos - np.asarray(start, float)):.2f} m')
+        return (
+            f'armed={st.armed} mode={st.mode} z={p.z:.2f} '
+            f'off_start={np.linalg.norm(pos - np.asarray(start, float)):.2f} m'
+        )
 
     def _target_escaped(self, start, tol=10.0):
         """Target estimate non-finite or still far off its start after co-settle."""
@@ -117,19 +125,22 @@ class InterceptEnv(BasePX4Env):
             return False
         p = todom.pose.pose.position
         pos = np.array([p.x, p.y, p.z]) + self._tspawn
-        return (not np.all(np.isfinite(pos))
-                or float(np.linalg.norm(pos - np.asarray(start, float))) > tol)
+        return (
+            not np.all(np.isfinite(pos))
+            or float(np.linalg.norm(pos - np.asarray(start, float))) > tol
+        )
 
     def _target_near(self, start, tol=2.5):
         todom = self.target_ros.odom()
         if todom is None:
             return False
         p = todom.pose.pose.position
-        pos = np.array([p.x, p.y, p.z]) + self._tspawn   # world frame
+        pos = np.array([p.x, p.y, p.z]) + self._tspawn  # world frame
         return float(np.linalg.norm(pos - np.asarray(start, float))) < tol
 
     def _cosettle(self, spawn, target_start, max_sim=15.0):
-        """Bring BOTH vehicles to their starts, commanding them every tick.
+        """
+        Bring BOTH vehicles to their starts, commanding them every tick.
 
         Run AFTER the interceptor's own reset. Capturing the target makes the two
         physical gz models collide, which can knock the target to the ground; the
@@ -145,28 +156,37 @@ class InterceptEnv(BasePX4Env):
         target_start = np.asarray(target_start, dtype=float)
         extra = self.sim.child_env if self.sim is not None else None
         if not self._target_airborne():
-            gz_set_entity_pose(self.cfg['world'], self.cfg['target_entity'],
-                               float(target_start[0]), float(target_start[1]), 0.3,
-                               extra_env=extra)
-            self.target_ros.arm(False)                   # clear crash/failsafe
+            gz_set_entity_pose(
+                self.cfg['world'],
+                self.cfg['target_entity'],
+                float(target_start[0]),
+                float(target_start[1]),
+                0.3,
+                extra_env=extra,
+            )
+            self.target_ros.arm(False)  # clear crash/failsafe
             self._wait_tick()
         elif not self._target_near(target_start, tol=3.0):
-            gz_set_entity_pose(self.cfg['world'], self.cfg['target_entity'],
-                               float(target_start[0]), float(target_start[1]),
-                               float(target_start[2]), extra_env=extra)
-        thold = target_start - self._tspawn              # target's own EKF frame
+            gz_set_entity_pose(
+                self.cfg['world'],
+                self.cfg['target_entity'],
+                float(target_start[0]),
+                float(target_start[1]),
+                float(target_start[2]),
+                extra_env=extra,
+            )
+        thold = target_start - self._tspawn  # target's own EKF frame
         t_end = (self.ros.sim_time() or 0.0) + max_sim
         deadline = time.monotonic() + 2 * max_sim + 10.0
         while True:
-            if (self._ready(spawn) and self._target_near(target_start)
-                    and self._target_airborne()):
+            if self._ready(spawn) and self._target_near(target_start) and self._target_airborne():
                 return 'settled'
             now = self.ros.sim_time()
             if self.use_sim_time and now is not None and now >= t_end:
                 return 'sim timeout'
             if time.monotonic() >= deadline:
                 return f'wall timeout (sim time {now})'
-            self.ros.publish_position_target(*spawn)     # hold interceptor
+            self.ros.publish_position_target(*spawn)  # hold interceptor
             si = self.ros.state()
             if si.mode != 'OFFBOARD':
                 self.ros.set_mode('OFFBOARD')
@@ -186,47 +206,53 @@ class InterceptEnv(BasePX4Env):
     # --- reset -----------------------------------------------------------------
     def reset(self, *, seed=None, options=None):
         rng = np.random.default_rng(seed) if seed is not None else self._rng
-        jitter = rng.uniform(-self.cfg['target_jitter'],
-                             self.cfg['target_jitter'], 3)
+        jitter = rng.uniform(-self.cfg['target_jitter'], self.cfg['target_jitter'], 3)
         jitter[2] = 0.0
         start = self._tspawn + jitter
         start[2] = self.cfg['target_altitude']
         self._target_start = start
         self._target_policy = make_target_policy(
-            self.cfg['target_policy'], list(start),
-            **(self.cfg.get('target_policy_params') or {}))
+            self.cfg['target_policy'], list(start), **(self.cfg.get('target_policy_params') or {})
+        )
 
         # interceptor recovery first (target uncommanded here), then co-settle
         # BOTH to their starts so they are airborne when the episode begins
         obs, info = super().reset(seed=seed, options=options)
-        self._run_world()        # lockstep: co-settle needs a running world
-        for _ in range(2):       # a knocked-down target can need a second pass
+        self._run_world()  # lockstep: co-settle needs a running world
+        for _ in range(2):  # a knocked-down target can need a second pass
             how = self._cosettle(self._spawn, start)
             self.target_ready = self._target_airborne() and self._target_near(start)
             if self.target_ready:
                 break
         if not self.target_ready:
-            print(f'[intercept_env] target not at start after reset ({how}): '
-                  f'{self._target_status(start)}', flush=True)
+            print(
+                f'[intercept_env] target not at start after reset ({how}): '
+                f'{self._target_status(start)}',
+                flush=True,
+            )
             if self.sim is not None:
                 # Neither failure heals in place: a diverged target estimator
                 # (z estimate climbing past 270 m while armed in OFFBOARD,
                 # after collisions) or a grounded target whose PX4 keeps
                 # refusing to arm. Reboot both PX4s and reset again.
-                why = ('estimator diverged' if self._target_escaped(start)
-                       else 'target will not take off')
+                why = (
+                    'estimator diverged'
+                    if self._target_escaped(start)
+                    else 'target will not take off'
+                )
                 print(f'[intercept_env] {why}: restarting the stack', flush=True)
                 self.sim.restart()
                 self._wait_stack_ready()
                 obs, info = super().reset(seed=seed, options=options)
                 self._run_world()
                 how = self._cosettle(self._spawn, start)
-                self.target_ready = (self._target_airborne()
-                                     and self._target_near(start))
+                self.target_ready = self._target_airborne() and self._target_near(start)
                 if not self.target_ready:
-                    print(f'[intercept_env] target still off start after the '
-                          f'restart ({how}): {self._target_status(start)}',
-                          flush=True)
+                    print(
+                        f'[intercept_env] target still off start after the '
+                        f'restart ({how}): {self._target_status(start)}',
+                        flush=True,
+                    )
         self._hold_world()
         # restart the episode clock after ALL recovery so t=0 is the true start
         self._t0 = self.ros.sim_time() if self.use_sim_time else None

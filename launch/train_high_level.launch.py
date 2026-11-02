@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Launch stage-1 (high-level PPO) interception training.
+"""
+Launch stage-1 (high-level PPO) interception training.
 
 The simulation (drone_interception_sim interception.launch.py) must already be
 running. This only starts the training process against it.
 """
+
 import os
 
 from ament_index_python import get_package_share_directory
@@ -14,16 +16,26 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    cfg = os.path.join(get_package_share_directory('shaheen_rl'),
-                       'config', 'train_ppo_high_level.yaml')
-    return LaunchDescription([
-        DeclareLaunchArgument('config', default_value=cfg),
-        DeclareLaunchArgument('timesteps', default_value='200000'),
-        Node(
-            package='shaheen_rl', executable='train', name='d2d_train',
-            output='screen',
-            arguments=['--stage', 'high',
-                       '--config', LaunchConfiguration('config'),
-                       '--timesteps', LaunchConfiguration('timesteps')],
-        ),
-    ])
+    cfg = os.path.join(
+        get_package_share_directory('shaheen_rl'), 'config', 'train_ppo_high_level.yaml'
+    )
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument('config', default_value=cfg),
+            DeclareLaunchArgument('timesteps', default_value='200000'),
+            Node(
+                package='shaheen_rl',
+                executable='train',
+                name='d2d_train',
+                output='screen',
+                arguments=[
+                    '--stage',
+                    'high',
+                    '--config',
+                    LaunchConfiguration('config'),
+                    '--timesteps',
+                    LaunchConfiguration('timesteps'),
+                ],
+            ),
+        ]
+    )

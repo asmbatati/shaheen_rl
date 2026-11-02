@@ -1,8 +1,10 @@
-"""High-level interception env (curriculum stage 1).
+"""
+High-level interception env (curriculum stage 1).
 
 The agent outputs an ENU velocity command; PX4 handles stabilization. This is
 the easiest-to-learn, most stable interface and the primary working env.
 """
+
 import math
 
 from gymnasium import spaces

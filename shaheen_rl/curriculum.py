@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Run the interception RL curriculum: a sequence of training stages.
+"""
+Run the interception RL curriculum: a sequence of training stages.
 
 Reads a curriculum YAML (see config/curriculum.yaml) and runs each stage as a
 fresh `train` process (one process per stage keeps PX4/rclpy state clean),
@@ -10,6 +11,7 @@ interception scenario). Example:
 
   ros2 run shaheen_rl curriculum --config <pkg>/config/curriculum.yaml
 """
+
 import argparse
 import os
 import subprocess
@@ -23,10 +25,15 @@ def main(argv=None):
     parser.add_argument('--config', required=True, help='curriculum YAML path')
     parser.add_argument('--ckptdir', default='checkpoints')
     parser.add_argument('--logdir', default='runs')
-    parser.add_argument('--timesteps', type=int, default=0,
-                        help='override per-stage total_timesteps (0 = use config)')
-    parser.add_argument('--start', type=int, default=0,
-                        help='index of the first stage to run (resume)')
+    parser.add_argument(
+        '--timesteps',
+        type=int,
+        default=0,
+        help='override per-stage total_timesteps (0 = use config)',
+    )
+    parser.add_argument(
+        '--start', type=int, default=0, help='index of the first stage to run (resume)'
+    )
     args, _ = parser.parse_known_args(argv)
 
     with open(args.config) as f:
@@ -52,9 +59,20 @@ def main(argv=None):
             stage_cfg = os.path.join(cfg_dir, stage_cfg)
         init_from = stage.get('init_from', '') or prev_ckpt
 
-        cmd = ['ros2', 'run', 'shaheen_rl', 'train',
-               '--stage', env_stage, '--name', name,
-               '--ckptdir', args.ckptdir, '--logdir', args.logdir]
+        cmd = [
+            'ros2',
+            'run',
+            'shaheen_rl',
+            'train',
+            '--stage',
+            env_stage,
+            '--name',
+            name,
+            '--ckptdir',
+            args.ckptdir,
+            '--logdir',
+            args.logdir,
+        ]
         if stage_cfg:
             cmd += ['--config', stage_cfg]
         if stage.get('target_policy'):
@@ -67,8 +85,7 @@ def main(argv=None):
         print(f'\n=== Curriculum stage {i}: {name} ===\n{" ".join(cmd)}\n', flush=True)
         result = subprocess.run(cmd)
         if result.returncode != 0:
-            print(f'Stage {name} failed (rc={result.returncode}); stopping.',
-                  file=sys.stderr)
+            print(f'Stage {name} failed (rc={result.returncode}); stopping.', file=sys.stderr)
             return result.returncode
         prev_ckpt = os.path.join(args.ckptdir, name, 'final_model.zip')
 

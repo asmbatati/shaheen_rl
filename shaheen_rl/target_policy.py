@@ -1,9 +1,11 @@
-"""Scripted target-drone motion policies used to drive the RL curriculum.
+"""
+Scripted target-drone motion policies used to drive the RL curriculum.
 
 The target is flown via position setpoints (it is its own PX4 instance). Each
 policy returns the next desired target position given the elapsed episode time
 and the target's start position.
 """
+
 import math
 
 
@@ -30,9 +32,7 @@ class ConstantVelocityTarget(TargetPolicy):
 
     def setpoint(self, t):
         v = self.params.get('velocity', (1.0, 0.0, 0.0))
-        return (self.start[0] + v[0] * t,
-                self.start[1] + v[1] * t,
-                self.start[2] + v[2] * t)
+        return (self.start[0] + v[0] * t, self.start[1] + v[1] * t, self.start[2] + v[2] * t)
 
 
 class EvasiveTarget(TargetPolicy):
@@ -56,7 +56,7 @@ POLICIES = {
 
 
 def make_target_policy(kind, start, **kwargs):
-    """Factory: build a target policy by name (see ``POLICIES``)."""
+    """Build a target policy by name (see ``POLICIES``)."""
     if kind not in POLICIES:
         raise ValueError(f'unknown target policy {kind!r}; choices: {list(POLICIES)}')
     return POLICIES[kind](start, **kwargs)

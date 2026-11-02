@@ -1,4 +1,5 @@
-"""Base Gymnasium environment for drone-to-drone interception (PX4 in the loop).
+"""
+Base Gymnasium environment for drone-to-drone interception (PX4 in the loop).
 
 Wraps the ROS2/PX4/Gazebo loop. ``reset`` repositions both drones and
 re-establishes the interceptor's armed/OFFBOARD state; ``step`` applies the
@@ -9,6 +10,7 @@ the observation, reward and termination signals.
 Subclasses implement the action space and ``_apply_action`` (see
 high_level_env.py and low_level_env.py). The 13-d base observation is shared.
 """
+
 import time
 
 import gymnasium as gym
@@ -67,8 +69,7 @@ class BaseInterceptEnv(gym.Env):
             self.cfg.update(config)
 
         self.control_dt = 1.0 / float(self.cfg['control_rate_hz'])
-        self.ros = ros or DroneRosInterface(self.cfg['interceptor_ns'],
-                                            self.cfg['target_ns'])
+        self.ros = ros or DroneRosInterface(self.cfg['interceptor_ns'], self.cfg['target_ns'])
 
         self._np = np.random.default_rng()
         self._step = 0
@@ -82,7 +83,8 @@ class BaseInterceptEnv(gym.Env):
         # Observation space is shared; subclasses may extend via _extra_obs_dim.
         obs_dim = 13 + self._extra_obs_dim()
         self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
+            low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32
+        )
         self.action_space = self._build_action_space()
 
     # --- hooks for subclasses ---------------------------------------------
@@ -133,9 +135,15 @@ class BaseInterceptEnv(gym.Env):
         rng = float(np.linalg.norm(rel_pos))
         los = rel_pos / rng if rng > 1e-6 else np.zeros(3)
         ps, vs = self.cfg['pos_scale'], self.cfg['vel_scale']
-        base = np.concatenate([
-            rel_pos / ps, rel_vel / vs, ivel / vs, [rng / ps], los,
-        ]).astype(np.float32)
+        base = np.concatenate(
+            [
+                rel_pos / ps,
+                rel_vel / vs,
+                ivel / vs,
+                [rng / ps],
+                los,
+            ]
+        ).astype(np.float32)
         extra = self._extra_obs(self.ros.interceptor_odom())
         return np.concatenate([base, extra]).astype(np.float32)
 
@@ -177,17 +185,26 @@ class BaseInterceptEnv(gym.Env):
         self._target_start = list(t_xyz)
 
         self._target_policy = make_target_policy(
-            self.cfg['target_policy'], self._target_start,
-            **self.cfg.get('target_policy_params', {}))
+            self.cfg['target_policy'],
+            self._target_start,
+            **self.cfg.get('target_policy_params', {})
+        )
 
         if self.cfg['use_teleport']:
-            reset_teleport(self.ros, self.cfg['world'],
-                           self.cfg['interceptor_entity'], self.cfg['target_entity'],
-                           tuple(i_xyz), tuple(t_xyz),
-                           settle_steps=self.cfg['settle_steps'], dt=self.control_dt)
+            reset_teleport(
+                self.ros,
+                self.cfg['world'],
+                self.cfg['interceptor_entity'],
+                self.cfg['target_entity'],
+                tuple(i_xyz),
+                tuple(t_xyz),
+                settle_steps=self.cfg['settle_steps'],
+                dt=self.control_dt,
+            )
         else:
-            reset_land_rearm(self.ros, tuple(i_xyz),
-                             settle_steps=self.cfg['settle_steps'], dt=self.control_dt)
+            reset_land_rearm(
+                self.ros, tuple(i_xyz), settle_steps=self.cfg['settle_steps'], dt=self.control_dt
+            )
 
         obs = self._build_obs()
         self._prev_range = self._range()
@@ -198,7 +215,7 @@ class BaseInterceptEnv(gym.Env):
         self._apply_action(action)
         self._drive_target()
 
-        time.sleep(self.control_dt)   # let the sim advance one control tick
+        time.sleep(self.control_dt)  # let the sim advance one control tick
         self._t += self.control_dt
         self._step += 1
 
