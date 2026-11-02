@@ -4,7 +4,7 @@
   <version>0.2.0</version>
   <description>Reinforcement learning for drone-to-drone interception (Gymnasium + SB3).</description>
   <maintainer email="asmalbatati@hotmail.com">Abdulrahman S. Al-Batati</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
