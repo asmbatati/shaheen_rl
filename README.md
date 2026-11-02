@@ -66,6 +66,15 @@ evaluation and `policy_head`, so the trained policies are consistent. The
 target velocity is rotated to the world frame (the training target holds yaw
 0, so this was a no-op for training but matters for a yawing target).
 
+To feed the interceptor velocity in the world frame instead, train with
+`--velocity-frame world` (`InterceptEnv` config key `velocity_frame`). The
+relative-velocity block, the alignment reward and the `pn` / `pn_int`
+baselines then use a velocity in the same frame as the target's. Evaluate and
+fly such a model in the frame it was trained in: `evaluate_intercept
+--velocity-frame world`, and `policy_head` / `pipeline.launch.py
+rl_velocity_frame:=world`. The default stays `body`, so every checkpoint
+trained before this option loads and behaves as before.
+
 Visualize live training (Gazebo GUI spectator), TensorBoard, capacity and
 troubleshooting: see AeroGym-PX4's `TRAINING.md` (partitions here are
 `aerogym_icpt_<policy>_<2r>`). Each worker pair costs ~5-6 CPU cores.

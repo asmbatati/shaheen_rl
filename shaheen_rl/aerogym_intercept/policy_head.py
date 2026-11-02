@@ -12,8 +12,10 @@ The observation is rebuilt as in training: AeroGym's base block (position /
 ``intercept`` task block computed by :class:`InterceptTask` itself, with the
 target in the common world frame via its spawn offset.
 
-Velocity frames: MAVROS publishes the odom twist in the BODY frame. Training
-used it as-is, so the interceptor velocity stays body-frame here too. The
+Velocity frames: MAVROS publishes the odom twist in the BODY frame. Models
+trained before C7 used it as-is, so the interceptor velocity stays body-frame
+here by default (``velocity_frame:=world`` for a model trained with
+``--velocity-frame world``). The
 training target held yaw 0, where body = world, so its velocity is rotated to
 world here: the benchmark target yaws along its path, and its raw body twist
 would always read "flying forward along +x". The action is mapped
@@ -37,6 +39,8 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from std_msgs.msg import String
 
+from .obs_frame import apply_velocity_frame, check_velocity_frame
+
 
 class PolicyHead(Node):
     """Arm/OFFBOARD sequencing + SB3 policy inference for the interceptor."""
@@ -52,8 +56,10 @@ class PolicyHead(Node):
         self.declare_parameter('capture_radius', 1.0)
         self.declare_parameter('target_spawn', [10.0, 0.0, 0.0])
         self.declare_parameter('deterministic', True)
+        self.declare_parameter('velocity_frame', 'body')
 
         g = self.get_parameter
+        self.velocity_frame = check_velocity_frame(g('velocity_frame').value)
         self.v_max = float(g('v_max').value)
         self.ps = float(g('pos_scale').value)
         self.vs = float(g('vel_scale').value)
@@ -107,13 +113,14 @@ class PolicyHead(Node):
         q, w = self.odom.pose.pose.orientation, self.odom.twist.twist.angular
         tp, to = self.todom.pose.pose.position, self.todom.pose.pose.orientation
         tv = self.todom.twist.twist.linear
-        return {'position': np.array([p.x, p.y, p.z]),
-                'velocity': np.array([v.x, v.y, v.z]),
-                'quaternion': np.array([q.x, q.y, q.z, q.w]),
-                'omega': np.array([w.x, w.y, w.z]),
-                'target_position': np.array([tp.x, tp.y, tp.z]) + self.tspawn,
-                'target_velocity': body_to_world([to.x, to.y, to.z, to.w],
-                                                 [tv.x, tv.y, tv.z])}
+        st = {'position': np.array([p.x, p.y, p.z]),
+              'velocity': np.array([v.x, v.y, v.z]),
+              'quaternion': np.array([q.x, q.y, q.z, q.w]),
+              'omega': np.array([w.x, w.y, w.z]),
+              'target_position': np.array([tp.x, tp.y, tp.z]) + self.tspawn,
+              'target_velocity': body_to_world([to.x, to.y, to.z, to.w],
+                                               [tv.x, tv.y, tv.z])}
+        return apply_velocity_frame(st, self.velocity_frame)
 
     def _obs(self, st, t):
         base = np.concatenate([st['position'] / self.ps, st['velocity'] / self.vs,

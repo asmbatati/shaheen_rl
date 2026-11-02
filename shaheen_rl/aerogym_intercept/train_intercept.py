@@ -42,6 +42,9 @@ def main(args=None):
     p.add_argument('--step-mode', default='free', choices=['free', 'lockstep'],
                    help="'lockstep': exact control period, independent of the "
                         'learner\'s compute time and machine load')
+    p.add_argument('--velocity-frame', default='body', choices=['body', 'world'],
+                   help='frame of the interceptor velocity in the observation. '
+                        'The model must be evaluated and flown in the same frame')
     p.add_argument('--episode-steps', type=int, default=None,
                    help='episode length in steps (env default 400, i.e. 20 s in lockstep)')
     p.add_argument('--device', default='auto',
@@ -57,6 +60,7 @@ def main(args=None):
             env_cfg = yaml.safe_load(f) or {}
     env_cfg['target_policy'] = args.target_policy
     env_cfg['step_mode'] = args.step_mode
+    env_cfg['velocity_frame'] = args.velocity_frame
     if args.episode_steps:
         env_cfg['episode_steps'] = args.episode_steps
     # Soft curriculum jump: a slow moving target (default 0.5 m/s) is reachable

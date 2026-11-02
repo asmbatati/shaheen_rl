@@ -21,6 +21,7 @@ from aerogym_px4.core.px4_reset import gz_set_entity_pose
 from aerogym_px4.core.ros_interface import VehicleRosInterface
 
 from ..target_policy import make_target_policy
+from .obs_frame import apply_velocity_frame, check_velocity_frame
 
 INTERCEPT_DEFAULTS = {
     'task': 'intercept',
@@ -31,6 +32,7 @@ INTERCEPT_DEFAULTS = {
     'target_policy': 'static',
     'target_policy_params': {},
     'target_jitter': 3.0,
+    'velocity_frame': 'body',             # interceptor velocity in the obs: body | world (C7)
     'episode_steps': 400,
     'arena_horiz': 60.0,
     'v_max': 8.0,
@@ -47,6 +49,7 @@ class InterceptEnv(BasePX4Env):
         if config:
             cfg.update(config)
         cfg['task'] = 'intercept'
+        check_velocity_frame(cfg['velocity_frame'])
         super().__init__(config=cfg, ros=ros, sim=sim)
         self.target_ros = VehicleRosInterface(
             self.cfg['target_ns'], node_name='aerogym_target_interface')
@@ -60,6 +63,7 @@ class InterceptEnv(BasePX4Env):
         state = super()._state()
         if state is None:
             return None
+        apply_velocity_frame(state, self.cfg['velocity_frame'])
         todom = self.target_ros.odom()
         if todom is not None:
             p = todom.pose.pose.position

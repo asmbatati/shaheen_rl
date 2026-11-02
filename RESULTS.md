@@ -440,6 +440,35 @@ Captures of 30 against the evasive target:
   episodes from the June model). The June models stay the deliverables;
   stage models are in `checkpoints/speed_55s/` (gitignored).
 
+## Velocity frame (ROADMAP C7)
+
+MAVROS `local_position/odom` carries the twist in the body frame, and the
+AeroGym observation used it as it came (see the README note). The `pn_int`
+baseline integrates a commanded velocity from that same interceptor velocity
+and the target's world-frame velocity, so it mixed two frames. `--velocity-frame
+world` rotates the interceptor velocity into the world frame; the default
+`body` leaves everything as before.
+
+`pn_int` vs the evasive target at 0.5 m/s, seed 200, 10 episodes, 20 s,
+lockstep (data: [`docs/eval/2026-11-02_velocity_frame/`](docs/eval/2026-11-02_velocity_frame/)):
+
+| interceptor velocity in the observation | captures | other outcomes | mean capture time |
+|---|---|---|---|
+| body (default, as in the matrix above) | 3/10 | 5 out of bounds, 2 timeouts | 2.5 s |
+| world (`--velocity-frame world`) | **10/10** | none | 2.8 s |
+
+Fisher exact test p = 0.003; Wilson 95 % intervals 11–60 % and 72–100 %. The
+body-frame 3/10 agrees with the matrix's `pn_int` 11/30 on the evasive target,
+so the low `pn_int` rows above are consistent with the frame mix being the
+cause, not constant-speed PN itself. `pn` (N = 3) reads the same velocity but
+reaches 30/30 in the default frame; its world-frame run was not done. The check
+also ran `model_evasive_40k` for 5 episodes in the default frame as
+a sanity run (4 captures, 1 crash, in the usual range for that cell); episodes
+do not repeat one for one between runs (see the note on the episode length).
+
+Not done: no model has been trained with `--velocity-frame world` yet. The
+June models expect the body frame, so evaluate and fly them with the default.
+
 ## Environment note
 
 MAVROS must be rebuilt after a system `diagnostic_updater` update (ABI change) or

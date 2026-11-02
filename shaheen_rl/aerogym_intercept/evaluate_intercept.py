@@ -98,6 +98,10 @@ def main(args=None):
     p.add_argument('--step-mode', default='free', choices=['free', 'lockstep'],
                    help="'lockstep' holds the world paused between steps so the "
                         'control period is exactly control_dt')
+    p.add_argument('--velocity-frame', default='body', choices=['body', 'world'],
+                   help='frame of the interceptor velocity in the observation; use '
+                        'the one the model was trained in. The pn and pn_int '
+                        'baselines read the same velocity')
     p.add_argument('--episode-steps', type=int, default=None,
                    help='episode length in steps (env default 400, i.e. 20 s in lockstep)')
     p.add_argument('--csv', default=None, help='append per-episode rows here')
@@ -112,7 +116,8 @@ def main(args=None):
     if args.policy == 'model' and not args.model:
         p.error('--model is required for --policy model')
 
-    eval_cfg = {'target_policy': args.target_policy, 'step_mode': args.step_mode}
+    eval_cfg = {'target_policy': args.target_policy, 'step_mode': args.step_mode,
+                'velocity_frame': args.velocity_frame}
     if args.episode_steps:
         eval_cfg['episode_steps'] = args.episode_steps
     if args.target_policy in ('constant_velocity', 'evasive'):
